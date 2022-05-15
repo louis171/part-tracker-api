@@ -1,0 +1,46 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model category {
+  categoryId      Int       @id
+  categoryName    String    @db.VarChar(100)
+  categoryCreated DateTime? @default(now()) @db.Timestamp(0)
+  categoryUpdated DateTime? @default(now()) @db.Timestamp(0)
+  part            part[]
+}
+
+model part {
+  partId                        Int      @id @default(autoincrement())
+  partManufacturer              String   @db.VarChar(50)
+  partModel                     String   @db.VarChar(200)
+  partCreated                   DateTime @default(now()) @db.Timestamp(0)
+  partUpdated                   DateTime @default(now()) @db.Timestamp(0)
+  partQuantity                  Int
+  partCategoryId                Int
+  partImageId                   Int?
+  category                      category @relation(fields: [partCategoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "partCategoryId")
+  image_imageTopart_partImageId image?   @relation("imageTopart_partImageId", fields: [partImageId], references: [imageId], onDelete: NoAction, onUpdate: NoAction, map: "partImageId")
+  image                         image[]
+
+  @@index([partCategoryId], map: "partCategoryId_idx")
+  @@index([partImageId], map: "partImageId_idx")
+}
+
+model image {
+  imageId                      Int      @id @default(autoincrement())
+  imagePartId                  Int
+  imagePath                    String   @db.VarChar(250)
+  imageCreated                 DateTime @default(now()) @db.Timestamp(0)
+  imageUpdated                 DateTime @default(now()) @db.Timestamp(0)
+  part                         part     @relation(fields: [imagePartId], references: [partId], onDelete: NoAction, onUpdate: NoAction, map: "imagePartId")
+  part_imageTopart_partImageId part[]   @relation("imageTopart_partImageId")
+
+  @@index([imagePartId], map: "imagePartId_idx")
+}
