@@ -60,6 +60,21 @@ partRouter.get("/parts", async (req, res, next) => {
     .catch((err) => next(err)); // passing error to middleware
 });
 
+// READ all parts RELEASED DATES
+partRouter.get("/parts/released", async (req, res, next) => {
+  await prismaClient.part
+    .findMany({
+      select: {
+        partId: true,
+        partReleased: true
+      }
+    })
+    .then((part) => {
+      res.status(200).json(part);
+    })
+    .catch((err) => next(err)); // passing error to middleware
+});
+
 // READ parts by category
 partRouter.get("/parts/category:partCategoryId?", async (req, res, next) => {
   await prismaClient.part
@@ -96,6 +111,7 @@ partRouter.post("/parts/create", handleUpload, (req, res, next) => {
         partId: partId,
         partManufacturer: req.body.partManufacturer,
         partModel: req.body.partModel,
+        partReleased: req.body.partReleased,
         partQuantity: parseInt(req.body.partQuantity),
         partCategoryId: parseInt(req.body.partCategoryId),
         image: {

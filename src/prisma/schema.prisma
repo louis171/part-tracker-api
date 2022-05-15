@@ -24,6 +24,7 @@ model part {
   partUpdated      DateTime @default(now()) @db.Timestamp(0)
   partQuantity     Int
   partCategoryId   Int
+  partReleased     DateTime @db.Date
   category         category @relation(fields: [partCategoryId], references: [categoryId], onDelete: Cascade, map: "partCategoryId")
   image            image[]
 
