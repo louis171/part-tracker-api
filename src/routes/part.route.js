@@ -140,7 +140,7 @@ partRouter.delete("/parts/delete:partId?", async (req, res, next) => {
   await prismaClient.part
     .delete({
       where: {
-        partId: parseInt(req.query.partId),
+        partId: req.query.partId,
       },
     })
     .then(
