@@ -8,7 +8,34 @@ const DIR = "./public/";
 const partRouter = express.Router();
 
 const prismaClient = require("../prisma/client");
-const { nanoid } = require('nanoid');
+const { nanoid } = require("nanoid");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, DIR);
+  },
+  filename: (req, file, cb) => {
+    const rng = nanoid(24);
+    const fileName = file.originalname.toLowerCase().split(" ").join("-");
+    cb(null, rng + "-" + fileName);
+  },
+});
+
+const handleUpload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype == "image/png" ||
+      file.mimetype == "image/jpg" ||
+      file.mimetype == "image/jpeg"
+    ) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+      return cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
+    }
+  },
+}).single("partImageUpload");
 
 // READ all parts
 partRouter.get("/parts", async (req, res, next) => {
@@ -20,6 +47,11 @@ partRouter.get("/parts", async (req, res, next) => {
             categoryName: true,
           },
         },
+        image: {
+          select: {
+            imagePath: true
+          }
+        }
       },
     })
     .then((part) => {
@@ -50,14 +82,28 @@ partRouter.get("/parts/category:partCategoryId?", async (req, res, next) => {
 });
 
 // CREATE new part
-partRouter.post("/parts/create", async (req, res, next) => {
-  await prismaClient.part
+partRouter.post("/parts/create", handleUpload, (req, res, next) => {
+  const partId = nanoid(16);
+  const imageId = nanoid(16);
+  console.log(req.file);
+  const url = req.protocol + '://' + req.get('host') + '/public'
+  console.log(url);
+  const path = url + "/" + req.file.path.split("\\")[1];
+  console.log("Path is: " + path)
+  prismaClient.part
     .create({
       data: {
+        partId: partId,
         partManufacturer: req.body.partManufacturer,
         partModel: req.body.partModel,
         partQuantity: parseInt(req.body.partQuantity),
-        partCategoryId: req.body.partCategoryId,
+        partCategoryId: parseInt(req.body.partCategoryId),
+        image: {
+          create: {
+            imageId: imageId,
+            imagePath: path,
+          },
+        },
       },
     })
     .then((part) => {
@@ -113,59 +159,21 @@ const uploadOLD = multer({
   // you might also want to set some limits: https://github.com/expressjs/multer#limits
 });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, DIR);
-  },
-  filename: (req, file, cb) => {
-    const rng = nanoid(24);
-    const fileName = file.originalname.toLowerCase().split(" ").join("-");
-    cb(null, rng + "-" + fileName);
-  },
-});
-
-const handleUpload = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    if (
-      file.mimetype == "image/png" ||
-      file.mimetype == "image/jpg" ||
-      file.mimetype == "image/jpeg"
-    ) {
-      cb(null, true);
-    } else {
-      cb(null, false);
-      return cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
-    }
-  },
-}).single("partImageUpload");
-
 partRouter.post(
   "/2upload",
-  uploadOLD.single(
-    "partImageUpload"
-  ),
+  uploadOLD.single("partImageUpload"),
   (req, res, next) => {
     console.log(req.file);
     console.log(req.file.path);
-
-
   }
 );
 
-partRouter.post(
-  "/upload2:partId?",
-  handleUpload, 
-  (req, res, next) => {
-    prismaClient.image.create({
-      data: {
-        partId: req.query.partId
-      }
-    }).then((image) => {
-      res.status(201).json({ message: "Success", image: image });
-    })
-    .catch((err) => next(err)); // passing error to middleware
-  }
-);
+partRouter.post("/upload2", handleUpload, (req, res, next) => {
+  console.log(req.file);
+  const url = req.protocol + '://' + req.get('host')
+  console.log(url);
+  const path = url + "/" + req.file.path.split("\\")[1];
+  console.log("Path is: " + path)
+});
 
 module.exports = partRouter;

@@ -2,6 +2,8 @@ const express = require("express");
 
 const cors = require("cors");
 const app = express();
+const path = require("path");
+const appRoot = require("app-root-path");
 
 const prismaClient = require("./prisma/client");
 const prismaErrorHandler = require("./middleware/prismaErrorHandler");
@@ -19,7 +21,11 @@ app.use(morgan("combined", { stream: logs.logStandard }));
 app.use(express.json());
 app.use(cors());
 
+
+
+app.use('/public', express.static('public'))
 app.use("/api", partRouter, categoryRouter);
+
 
 // Error handling middleware
 app.use(prismaErrorHandler);
