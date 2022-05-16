@@ -5,13 +5,13 @@ const logs = require("../config/morgan.config");
 // Checks for prisma related errors and handles accordingly
 prismaErrorHandler = (err, req, res, next) => {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    logs.prismaLogStandard.write(
+/*     logs.prismaLogStandard.write(
       prismaClient.$on("query", (e) => {
         console.log("Query: " + e.query);
         console.log("Params: " + e.params);
         console.log("Duration: " + e.duration + "ms");
       })
-    );
+    ); */
     res
       .status(500)
       .json({ errorCode: err.code, meta: err.meta, message: err.message });

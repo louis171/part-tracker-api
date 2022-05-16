@@ -100,11 +100,8 @@ partRouter.get("/parts/category:partCategoryId?", async (req, res, next) => {
 partRouter.post("/parts/create", handleUpload, (req, res, next) => {
   const partId = nanoid(16);
   const imageId = nanoid(16);
-  console.log(req.file);
   const url = req.protocol + '://' + req.get('host') + '/public'
-  console.log(url);
   const path = url + "/" + req.file.path.split("\\")[1];
-  console.log("Path is: " + path)
   prismaClient.part
     .create({
       data: {
@@ -153,7 +150,7 @@ partRouter.put("/parts/update:partId?", async (req, res, next) => {
 
 // DELETE part by partId
 partRouter.delete("/parts/delete:partId?", async (req, res, next) => {
-  await prismaClient.part
+   await prismaClient.part
     .delete({
       where: {
         partId: req.query.partId,
@@ -164,7 +161,7 @@ partRouter.delete("/parts/delete:partId?", async (req, res, next) => {
         .status(200)
         .json({ message: `Delete part with ID ${req.query.partId}` })
     )
-    .catch((err) => next(err)); // passing error to middleware
+    .catch((err) => next(err)); // passing error to middleware 
 });
 
 const uploadOLD = multer({
@@ -173,23 +170,6 @@ const uploadOLD = multer({
     files: 1,
   },
   // you might also want to set some limits: https://github.com/expressjs/multer#limits
-});
-
-partRouter.post(
-  "/2upload",
-  uploadOLD.single("partImageUpload"),
-  (req, res, next) => {
-    console.log(req.file);
-    console.log(req.file.path);
-  }
-);
-
-partRouter.post("/upload2", handleUpload, (req, res, next) => {
-  console.log(req.file);
-  const url = req.protocol + '://' + req.get('host')
-  console.log(url);
-  const path = url + "/" + req.file.path.split("\\")[1];
-  console.log("Path is: " + path)
 });
 
 module.exports = partRouter;
