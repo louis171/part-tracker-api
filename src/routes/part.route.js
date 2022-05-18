@@ -127,21 +127,30 @@ partRouter.post("/parts/create", handleUpload, (req, res, next) => {
 
 // UPDATE part by partId
 partRouter.put("/parts/update:partId?", async (req, res, next) => {
+  const partId = nanoid(16);
+  const imageId = nanoid(16);
   await prismaClient.part
     .update({
       where: {
-        partId: parseInt(req.query.partId),
+        partId: partId
       },
       data: {
         partManufacturer: req.body.partManufacturer,
         partModel: req.body.partModel,
-        partQuantity: req.body.partQuantity,
-        partCategoryId: req.body.partCategoryId,
+        partReleased: req.body.partReleased,
+        partQuantity: parseInt(req.body.partQuantity),
+        partCategoryId: parseInt(req.body.partCategoryId),
+        image: {
+          create: {
+            imageId: imageId,
+            imagePath: path,
+          },
+        },
       },
     })
     .then((part) => {
       res.status(200).json({
-        message: `Updated part with ID ${req.query.partId}`,
+        message: `Updated part with ID ${partId}`,
         part: part,
       });
     })
