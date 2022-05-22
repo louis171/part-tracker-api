@@ -23,8 +23,10 @@ It also holds the Prisma Schema for MySQL
 
 ## Todo
 
-* Add routes for categories
-  - Create
-  - Update
-  - Delete
-* Add auto delete of stored image when part is deleted from MySQL
+| Feature  | Status |
+| ------------- | ------------- |
+| Create route for updating image  | :ballot_box_with_check:  |
+| Add create route for categories  | In progress  |
+| Add update route for categories  | In progress  |
+| Add delete route for categories  | In progress  |
+| Auto delete of stored image when part is deleted  | In progress  |
