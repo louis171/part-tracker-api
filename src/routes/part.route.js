@@ -10,6 +10,8 @@ const partRouter = express.Router();
 const prismaClient = require("../prisma/client");
 const { nanoid } = require("nanoid");
 
+// Handles destination and building filename
+// Filename: rng string from nanoid concat original filename with spaces replaced with hyphens
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, DIR);
@@ -21,8 +23,41 @@ const storage = multer.diskStorage({
   },
 });
 
+// Handles save to disk
+// Checks for file type and returns error if the incorrect filetype
 const handleUpload = multer({
   storage: storage,
+  fileFilter: (req, file, cb) => {
+    if (
+      file.mimetype == "image/png" ||
+      file.mimetype == "image/jpg" ||
+      file.mimetype == "image/jpeg"
+    ) {
+      cb(null, true);
+    } else {
+      cb(null, false);
+      cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
+    }
+  },
+}).single("partImageUpload");
+
+// Handles destination and building filename
+// Filename: rng string from nanoid concat original filename with spaces replaced with hyphens
+const storageUpdate = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, DIR);
+  },
+  filename: (req, file, cb) => {
+    const rng = nanoid(24);
+    const fileName = file.originalname.toLowerCase().split(" ").join("-");
+    cb(null, rng + "-" + fileName);
+  },
+});
+
+// Handles save to disk
+// Checks for file type and returns error if the incorrect filetype
+const handleUpdate = multer({
+  storage: storageUpdate,
   fileFilter: (req, file, cb) => {
     if (
       file.mimetype == "image/png" ||
@@ -35,7 +70,9 @@ const handleUpload = multer({
       return cb(new Error("Only .png, .jpg and .jpeg format allowed!"));
     }
   },
-}).single("partImageUpload");
+}).single("partImageUpdate");
+
+const noUpload = multer().none();
 
 // READ all parts
 partRouter.get("/parts", async (req, res, next) => {
@@ -45,13 +82,15 @@ partRouter.get("/parts", async (req, res, next) => {
         category: {
           select: {
             categoryName: true,
+            categoryId: true,
           },
         },
         image: {
           select: {
-            imagePath: true
-          }
-        }
+            imagePath: true,
+            imageId: true
+          },
+        },
       },
     })
     .then((part) => {
@@ -66,8 +105,8 @@ partRouter.get("/parts/released", async (req, res, next) => {
     .findMany({
       select: {
         partId: true,
-        partReleased: true
-      }
+        partReleased: true,
+      },
     })
     .then((part) => {
       res.status(200).json(part);
@@ -100,7 +139,7 @@ partRouter.get("/parts/category:partCategoryId?", async (req, res, next) => {
 partRouter.post("/parts/create", handleUpload, (req, res, next) => {
   const partId = nanoid(16);
   const imageId = nanoid(16);
-  const url = req.protocol + '://' + req.get('host') + '/public'
+  const url = req.protocol + "://" + req.get("host") + "/public";
   const path = url + "/" + req.file.path.split("\\")[1];
   prismaClient.part
     .create({
@@ -126,13 +165,11 @@ partRouter.post("/parts/create", handleUpload, (req, res, next) => {
 });
 
 // UPDATE part by partId
-partRouter.put("/parts/update:partId?", async (req, res, next) => {
-  const partId = nanoid(16);
-  const imageId = nanoid(16);
+partRouter.put("/parts/update:partId?", noUpload, async (req, res, next) => {
   await prismaClient.part
     .update({
       where: {
-        partId: partId
+        partId: req.query.partId,
       },
       data: {
         partManufacturer: req.body.partManufacturer,
@@ -140,26 +177,46 @@ partRouter.put("/parts/update:partId?", async (req, res, next) => {
         partReleased: req.body.partReleased,
         partQuantity: parseInt(req.body.partQuantity),
         partCategoryId: parseInt(req.body.partCategoryId),
-        image: {
-          create: {
-            imageId: imageId,
-            imagePath: path,
-          },
-        },
       },
     })
     .then((part) => {
       res.status(200).json({
-        message: `Updated part with ID ${partId}`,
+        message: `Updated part with ID ${req.query.partId}`,
         part: part,
       });
     })
     .catch((err) => next(err)); // passing error to middleware
 });
 
+// Update image by imageId
+partRouter.put(
+  "/parts/image/update:imageId?",
+  handleUpdate,
+  async (req, res, next) => {
+    const url = req.protocol + "://" + req.get("host") + "/public";
+    const path = url + "/" + req.file.path.split("\\")[1];
+    await prismaClient.image
+      .update({
+        where: {
+          imageId: req.query.imageId,
+        },
+        data: {
+          imagePath: path,
+        },
+      })
+      .then((part) => {
+        res.status(200).json({
+          message: `Updated image with ID ${req.query.imageId}`,
+          part: part,
+        });
+      })
+      .catch((err) => next(err)); // passing error to middleware
+  }
+);
+
 // DELETE part by partId
 partRouter.delete("/parts/delete:partId?", async (req, res, next) => {
-   await prismaClient.part
+  await prismaClient.part
     .delete({
       where: {
         partId: req.query.partId,
@@ -170,7 +227,7 @@ partRouter.delete("/parts/delete:partId?", async (req, res, next) => {
         .status(200)
         .json({ message: `Delete part with ID ${req.query.partId}` })
     )
-    .catch((err) => next(err)); // passing error to middleware 
+    .catch((err) => next(err)); // passing error to middleware
 });
 
 const uploadOLD = multer({
