@@ -26,6 +26,7 @@ It also holds the Prisma Schema for MySQL
 | Feature  | Status |
 | ------------- | ------------- |
 | Create route for updating image  | :ballot_box_with_check:  |
+| Add part link  | :ballot_box_with_check:  |
 | Add create route for categories  | In progress  |
 | Add update route for categories  | In progress  |
 | Add delete route for categories  | In progress  |

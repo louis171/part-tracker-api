@@ -25,6 +25,7 @@ model part {
   partQuantity     Int
   partCategoryId   Int
   partReleased     DateTime @db.Date
+  partLink         String?  @db.VarChar(200)
   category         category @relation(fields: [partCategoryId], references: [categoryId], onDelete: Cascade, map: "partCategoryId")
   image            image[]
 

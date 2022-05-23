@@ -150,6 +150,7 @@ partRouter.post("/parts/create", handleUpload, (req, res, next) => {
         partReleased: req.body.partReleased,
         partQuantity: parseInt(req.body.partQuantity),
         partCategoryId: parseInt(req.body.partCategoryId),
+        partLink: req.body.partLink,
         image: {
           create: {
             imageId: imageId,
@@ -177,6 +178,7 @@ partRouter.put("/parts/update:partId?", noUpload, async (req, res, next) => {
         partReleased: req.body.partReleased,
         partQuantity: parseInt(req.body.partQuantity),
         partCategoryId: parseInt(req.body.partCategoryId),
+        partLink: req.body.partLink,
       },
     })
     .then((part) => {
