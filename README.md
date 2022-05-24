@@ -30,4 +30,4 @@ It also holds the Prisma Schema for MySQL
 | Add create route for categories  | In progress  |
 | Add update route for categories  | In progress  |
 | Add delete route for categories  | In progress  |
-| Auto delete of stored image when part is deleted  | In progress  |
+| Auto delete of stored image when part is deleted  | :ballot_box_with_check:  |
