@@ -88,7 +88,7 @@ partRouter.get("/parts", async (req, res, next) => {
         image: {
           select: {
             imagePath: true,
-            imageId: true
+            imageId: true,
           },
         },
       },
@@ -216,8 +216,21 @@ partRouter.put(
   }
 );
 
-// DELETE part by partId
+// DELETE part by partId and remove image from ./public
 partRouter.delete("/parts/delete:partId?", async (req, res, next) => {
+  await prismaClient.image
+    .findFirst({
+      where: {
+        imagePartId: req.query.partId,
+      },
+    })
+    .then((image) => {
+      // Deletes image from ./public by splitting path
+      fs.unlink(`public/${image.imagePath.split("/").pop()}`, (err) => {
+        if (err) next(err);
+      });
+    })
+    .catch((err) => next(err));
   await prismaClient.part
     .delete({
       where: {
